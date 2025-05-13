@@ -10,6 +10,10 @@
 #
 
 import os
+# os.environ["WANDB_API_KEY"] = "23301237f7961e638441b5ffc9c9d869f6799254"
+import wandb
+wandb.init(project="SC-GS", dir="./wandb", name='tmp', group='tmp')
+
 # os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
 import time
 import torch
@@ -130,6 +134,7 @@ class MiniCam:
 
 class GUI:
     def __init__(self, args, dataset, opt, pipe, testing_iterations, saving_iterations) -> None:
+        from jhutil import color_log; color_log(1111, "prepare training")
         self.dataset = dataset
         self.args = args
         self.opt = opt
@@ -150,6 +155,7 @@ class GUI:
         gs_fea_dim = self.deform.deform.node_num if args.skinning and self.deform.name == 'node' else self.dataset.hyper_dim
         self.gaussians = GaussianModel(dataset.sh_degree, fea_dim=gs_fea_dim, with_motion_mask=self.dataset.gs_with_motion_mask)
 
+        from jhutil import color_log; color_log("aaaa", "load secne")
         self.scene = Scene(dataset, self.gaussians, load_iteration=-1)
         self.gaussians.training_setup(opt)
         if self.deform.name == 'node' and not deform_loaded:
@@ -994,14 +1000,18 @@ class GUI:
     
     # no gui mode
     def train(self, iters=5000):
+        
+        from jhutil import color_log; color_log(5555, "training start")
         if iters > 0:
-            for i in tqdm.trange(iters):
+            for step in tqdm.trange(iters):
                 if self.deform.name == 'node' and self.iteration_node_rendering < self.opt.iterations_node_rendering:
-                    self.train_node_rendering_step()
+                    self.train_node_rendering_step(step)
                 else:
-                    self.train_step()
+                    self.train_step(step)
     
-    def train_step(self):
+    def train_step(self, step):
+        from jhutil import color_log; color_log(7777, "train_step", repeat=False)
+
         if network_gui.conn == None:
             network_gui.try_connect()
         while network_gui.conn != None:
@@ -1044,11 +1054,14 @@ class GUI:
         total_frame = len(self.scene.getTrainCameras())
         time_interval = 1 / total_frame
 
+        from jhutil import color_log; color_log("aaaa", "pick random_camera", repeat=False)
         viewpoint_cam = self.viewpoint_stack.pop(randint(0, len(self.viewpoint_stack) - 1))
         if self.dataset.load2gpu_on_the_fly:
             viewpoint_cam.load2device()
         fid = viewpoint_cam.fid
 
+
+        from jhutil import color_log; color_log("bbbb", "get deformation", repeat=False)
         if self.deform.name == 'mlp' or self.deform.name == 'static':
             if self.iteration < self.opt.warm_up:
                 d_xyz, d_rotation, d_scaling, d_opacity, d_color = 0.0, 0.0, 0.0, 0.0, 0.0
@@ -1072,11 +1085,13 @@ class GUI:
             elif self.iteration < self.opt.dynamic_color_warm_up:
                 d_color = d_color.detach() if d_color is not None else None
 
+        from jhutil import color_log; color_log("cccc", "render", repeat=False)
         # Render
         random_bg_color = (not self.dataset.white_background and self.opt.random_bg_color) and self.opt.gt_alpha_mask_as_scene_mask and viewpoint_cam.gt_alpha_mask is not None
         render_pkg_re = render(viewpoint_cam, self.gaussians, self.pipe, self.background, d_xyz, d_rotation, d_scaling, random_bg_color=random_bg_color, d_opacity=d_opacity, d_color=d_color, d_rot_as_res=self.deform.d_rot_as_res)
         image, viewspace_point_tensor, visibility_filter, radii = render_pkg_re["render"], render_pkg_re["viewspace_points"], render_pkg_re["visibility_filter"], render_pkg_re["radii"]
 
+        from jhutil import color_log; color_log("dddd", "calc loss", repeat=False)
         # Loss
         gt_image = viewpoint_cam.original_image.cuda()
         if random_bg_color:
@@ -1226,8 +1241,11 @@ class GUI:
                 f"step = {self.iteration: 5d} loss = {loss.item():.4f}",
             )
    
-    def train_node_rendering_step(self):
+    def train_node_rendering_step(self, step):
+        
+        from jhutil import color_log; color_log(6666, "train_node", repeat=False)
         # Pick a random Camera
+        from jhutil import color_log; color_log("aaaa", "pick random camera", repeat=False)
         if not self.viewpoint_stack:
             if self.opt.progressive_train_node and self.iteration_node_rendering < int(self.opt.progressive_stage_steps / self.opt.progressive_stage_ratio) + self.opt.node_warm_up:
                 if self.iteration_node_rendering < self.opt.node_warm_up:
@@ -1265,23 +1283,36 @@ class GUI:
         ast_noise = 0 if self.dataset.is_blender else torch.randn(1, 1, device='cuda').expand(N, -1) * time_interval * self.smooth_term(self.iteration_node_rendering)
         d_values = self.deform.deform.query_network(x=self.deform.deform.as_gaussians.get_xyz.detach(), t=time_input + ast_noise)
         d_xyz, d_opacity, d_color = d_values['d_xyz'] * self.deform.deform.as_gaussians.motion_mask, d_values['d_opacity'] * self.deform.deform.as_gaussians.motion_mask if d_values['d_opacity'] is not None else None, d_values['d_color'] * self.deform.deform.as_gaussians.motion_mask if d_values['d_color'] is not None else None
+
         d_rot, d_scale = 0., 0.
         if self.iteration_node_rendering < self.opt.node_warm_up:
             d_xyz = d_xyz.detach()
         d_color = d_color.detach() if d_color is not None else None
         d_opacity = d_opacity.detach() if d_opacity is not None else None
 
+        from jhutil import color_log; color_log("bbbb", "render gaussian", repeat=False)
         # Render
         random_bg_color = (self.opt.gt_alpha_mask_as_scene_mask or (self.opt.gt_alpha_mask_as_dynamic_mask and not self.deform.deform.as_gaussians.with_motion_mask)) and viewpoint_cam.gt_alpha_mask is not None
         render_pkg_re = render(viewpoint_cam, self.deform.deform.as_gaussians, self.pipe, self.background, d_xyz, d_rot, d_scale, random_bg_color=random_bg_color, d_opacity=d_opacity, d_color=d_color, d_rot_as_res=self.deform.d_rot_as_res)
         image, viewspace_point_tensor, visibility_filter, radii = render_pkg_re["render"], render_pkg_re["viewspace_points"], render_pkg_re["visibility_filter"], render_pkg_re["radii"]
 
+        from jhutil import color_log; color_log("cccc", "calc loss", repeat=False)
         # Loss
         gt_image = viewpoint_cam.original_image.cuda()
         if random_bg_color:
             gt_alpha_mask = viewpoint_cam.gt_alpha_mask.cuda()
             gt_image = gt_image * gt_alpha_mask + render_pkg_re['bg_color'][:, None, None] * (1 - gt_alpha_mask)
         Ll1 = l1_loss(image, gt_image)
+        from jhutil import color_log; color_log(1111, len(d_xyz), Ll1, update=True)
+        if step == 1000:
+            breakpoint()
+            # torch.save([image, gt_image], "/tmp/.cache/image.pt")
+            # [image, gt_image] = torch.load("/tmp/.cache/image.pt")
+            torch.save(self.deform.deform.as_gaussians.get_xyz.detach(), "/tmp/.cache/xyz.pt")
+            xyz = torch.load("/tmp/.cache/xyz.pt")
+
+
+
         loss_img = (1.0 - self.opt.lambda_dssim) * Ll1 + self.opt.lambda_dssim * (1.0 - ssim(image, gt_image))
         loss = loss_img
 

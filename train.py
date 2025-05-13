@@ -19,6 +19,8 @@ from piq import LPIPS
 lpips = LPIPS()
 from argparse import Namespace
 from pytorch_msssim import ms_ssim
+import wandb
+from jhutil import show_matching
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -99,6 +101,9 @@ def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_i
                     lpips_list.append(lpips(image[None], gt_image[None]).mean())
                     ms_ssim_list.append(ms_ssim(image[None], gt_image[None], data_range=1.).mean())
                     alex_lpips_list.append(alex_lpips(image[None], gt_image[None]).mean())
+                    
+                    two_img = show_matching(image, gt_image, bbox=None, skip_line=True)
+                    wandb.log({"img_render": wandb.Image(two_img, caption=f"{idx}"),})
 
                     # images = torch.cat((images, image.unsqueeze(0)), dim=0)
                     # gts = torch.cat((gts, gt_image.unsqueeze(0)), dim=0)
@@ -126,17 +131,17 @@ def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_i
                     print("\n[ITER {}] Evaluating {}: L1 {} PSNR {} SSIM {} LPIPS {} MS SSIM{} ALEX_LPIPS {}".format(iteration, config['name'], l1_test, psnr_test, ssim_test, lpips_test, ms_ssim_test, alex_lpips_test))
                 else:
                     progress_bar.set_description("\n[ITER {}] Evaluating {}: L1 {} PSNR {} SSIM {} LPIPS {} MS SSIM {} ALEX_LPIPS {}".format(iteration, config['name'], l1_test, psnr_test, ssim_test, lpips_test, ms_ssim_test, alex_lpips_test))
-                if tb_writer:
-                    tb_writer.add_scalar(config['name'] + '/loss_viewpoint - l1_loss', l1_test, iteration)
-                    tb_writer.add_scalar(config['name'] + '/loss_viewpoint - psnr', psnr_test, iteration)
-                    tb_writer.add_scalar(config['name'] + '/loss_viewpoint - ssim', test_ssim, iteration)
-                    tb_writer.add_scalar(config['name'] + '/loss_viewpoint - lpips', test_lpips, iteration)
-                    tb_writer.add_scalar(config['name'] + '/loss_viewpoint - ms-ssim', test_ms_ssim, iteration)
-                    tb_writer.add_scalar(config['name'] + '/loss_viewpoint - alex-lpips', test_alex_lpips, iteration)
+                # if tb_writer:
+                #     tb_writer.add_scalar(config['name'] + '/loss_viewpoint - l1_loss', l1_test, iteration)
+                #     tb_writer.add_scalar(config['name'] + '/loss_viewpoint - psnr', psnr_test, iteration)
+                #     tb_writer.add_scalar(config['name'] + '/loss_viewpoint - ssim', test_ssim, iteration)
+                #     tb_writer.add_scalar(config['name'] + '/loss_viewpoint - lpips', test_lpips, iteration)
+                #     tb_writer.add_scalar(config['name'] + '/loss_viewpoint - ms-ssim', test_ms_ssim, iteration)
+                #     tb_writer.add_scalar(config['name'] + '/loss_viewpoint - alex-lpips', test_alex_lpips, iteration)
 
-        if tb_writer:
-            tb_writer.add_histogram("scene/opacity_histogram", scene.gaussians.get_opacity, iteration)
-            tb_writer.add_scalar('total_points', scene.gaussians.get_xyz.shape[0], iteration)
+        # if tb_writer:
+        #     tb_writer.add_histogram("scene/opacity_histogram", scene.gaussians.get_opacity, iteration)
+        #     tb_writer.add_scalar('total_points', scene.gaussians.get_xyz.shape[0], iteration)
         torch.cuda.empty_cache()
 
     return test_psnr, test_ssim, test_lpips, test_ms_ssim, test_alex_lpips

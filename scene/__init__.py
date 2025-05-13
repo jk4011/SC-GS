@@ -41,7 +41,20 @@ class Scene:
         self.train_cameras = {}
         self.test_cameras = {}
 
-        if os.path.exists(os.path.join(args.source_path, "sparse")) or os.path.exists(os.path.join(args.source_path, "colmap_sparse")):
+
+        from jhutil import color_log; color_log("bbbb", "load scene_info")
+        # from jhutil import color_log; color_log(2222, "데이터셋 선택")
+
+        if os.path.exists(os.path.join(args.source_path, "0")):
+            print("Found 0 folder, assuming DFA data set!")
+            scene_info = sceneLoadTypeCallbacks["DFA"](args.source_path, "0", "10", "0")
+
+        elif os.path.exists(os.path.join(args.source_path, "segmented_ngp")):
+            print("Found segment_ngp folder, assuming Diva360 data set!")
+            # TODO: implement diva
+
+        elif os.path.exists(os.path.join(args.source_path, "sparse")) or os.path.exists(os.path.join(args.source_path, "colmap_sparse")):
+            print("Found sparse folder, assuming Colmap data set!")
             scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.eval)
         elif os.path.exists(os.path.join(args.source_path, "transforms_train.json")):
             print("Found transforms_train.json file, assuming Blender data set!")
