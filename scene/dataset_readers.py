@@ -1054,22 +1054,27 @@ def readDFASceneInfo(path, idx_from, idx_to, cam_idx, n_pcd=10000):
     
     train_cam_infos = []
     test_cam_infos = []
-    for uid in range(n_data):
-        (fx, fy, cx, cy) = intrinsic_list[0]
-        file_name = file_name_list[0]
+    for i in range(n_data):
+        (fx, fy, cx, cy) = intrinsic_list[i]
+        file_name = file_name_list[i]
         image_path = os.path.join(data_dir, 'images', file_name)
         image = Image.open(image_path)
-        w2c = w2c_list[0]
+        w2c = w2c_list[i]
         height, width = image.size
         FovY = focal2fov(fy, height)
         FovX = focal2fov(fx, width)
-        cam_info = CameraInfo(uid=uid, R=w2c[:3, :3], T=w2c[:3, 3], FovY=FovY, FovX=FovX, image=image,
+
+        R = w2c[:3, :3].T
+        R = R[[1, 0, 2]]
+        uid = i
+        cam_info = CameraInfo(uid=uid, R=R, T=w2c[:3, 3], FovY=FovY, FovX=FovX, image=image,
                               image_path=image_path, image_name=file_name, width=width, height=height, fid=uid)
         if uid % 8 == 4:
             test_cam_infos.append(cam_info)
         else:
             train_cam_infos.append(cam_info)
-    
+
+
     nerf_normalization = getNerfppNorm(train_cam_infos + test_cam_infos, apply=False)
     
 

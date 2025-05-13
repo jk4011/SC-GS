@@ -1303,9 +1303,7 @@ class GUI:
             gt_alpha_mask = viewpoint_cam.gt_alpha_mask.cuda()
             gt_image = gt_image * gt_alpha_mask + render_pkg_re['bg_color'][:, None, None] * (1 - gt_alpha_mask)
         Ll1 = l1_loss(image, gt_image)
-        from jhutil import color_log; color_log(1111, len(d_xyz), Ll1, update=True)
-        if step == 1000:
-            breakpoint()
+        if step == 3000:
             # torch.save([image, gt_image], "/tmp/.cache/image.pt")
             # [image, gt_image] = torch.load("/tmp/.cache/image.pt")
             torch.save(self.deform.deform.as_gaussians.get_xyz.detach(), "/tmp/.cache/xyz.pt")
