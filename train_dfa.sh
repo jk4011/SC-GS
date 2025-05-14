@@ -1,6 +1,6 @@
 CUDA_VISIBLE_DEVICES=0 python train_gui.py \
-    --source_path "/root/wlsgur4011/GESI/SC-GS/data/DFA_processed/beagle_dog(s1_24fps)" \
-    --model_path "outputs/dfa/beagle_dog(s1_24fps)" \
+    --source_path "/root/wlsgur4011/GESI/SC-GS/data/DFA_processed/beagle_dog(s1)" \
+    --model_path "outputs/dfa/beagle_dog(s1)" \
     --deform_type node \
     --node_num 512 \
     --hyper_dim 8 \
