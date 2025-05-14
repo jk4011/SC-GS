@@ -2,7 +2,6 @@
 import os
 # os.environ["WANDB_API_KEY"] = "23301237f7961e638441b5ffc9c9d869f6799254"
 import wandb
-wandb.init(project="SC-GS", dir="./wandb", name='tmp', group='tmp')
 
 # os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
 import time
@@ -126,8 +125,15 @@ def train_step(self, step):
     loss_img = (1.0 - self.opt.lambda_dssim) * Ll1 + self.opt.lambda_dssim * (1.0 - ssim(image, gt_image))
     loss = loss_img
 
+
+    if step % 1000 == 0:
+        from jhutil import get_img_diff
+        wandb.log({
+            "diff_img": wandb.Image(get_img_diff(image, gt_image))
+        }, step=step, commit=True)
+    
     n_gaussian = self.gaussians.get_xyz.detach()
-    from jhutil import color_log; color_log(0000, f'n_gaussian: {n_gaussian}   loss: {loss:.3f}', update=True)
+    # from jhutil import color_log; color_log(0000, f'n_gaussian: {n_gaussian}   loss: {loss:.3f}', update=True)
 
     if self.iteration > self.opt.warm_up:
         loss = loss + self.deform.reg_loss

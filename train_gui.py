@@ -12,7 +12,6 @@
 import os
 # os.environ["WANDB_API_KEY"] = "23301237f7961e638441b5ffc9c9d869f6799254"
 import wandb
-wandb.init(project="SC-GS", dir="./wandb", name='tmp', group='tmp')
 
 # os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
 import time
@@ -1492,9 +1491,14 @@ if __name__ == "__main__":
     parser.add_argument("--save_iterations", nargs="+", type=int, default=[7_000, 10_000, 20_000, 30_000, 40000])
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--deform-type", type=str, default='mlp')
+    parser.add_argument("--wandb_group", type=str, default='tmp')
+    
 
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)
+
+    name = args.source_path.split('/')[-1]
+    wandb.init(project=f"SC-GS", dir="./wandb", name=name, group=args.wandb_group)
 
     if not args.model_path.endswith(args.deform_type):
         args.model_path = os.path.join(os.path.dirname(os.path.normpath(args.model_path)), os.path.basename(os.path.normpath(args.model_path)) + f'_{args.deform_type}')
@@ -1505,6 +1509,10 @@ if __name__ == "__main__":
     
     print("Optimizing " + args.model_path)
     safe_state(args.quiet)
+
+    # lp = ModelParams(parser)
+    # if "DFA" in args.source_path:
+    #     lp._white_background = True
 
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
     gui = GUI(args=args, dataset=lp.extract(args), opt=op.extract(args), pipe=pp.extract(args),testing_iterations=args.test_iterations, saving_iterations=args.save_iterations)

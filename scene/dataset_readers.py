@@ -350,6 +350,9 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png", no_bg=
     train_cam_infos = readCamerasFromTransforms(
         path, "transforms_train.json", white_background, extension, no_bg=no_bg)
     print(f"Read Train Transforms with {len(train_cam_infos)} cameras")
+    
+    transform_list = [[cam_info.R, cam_info.T] for cam_info in train_cam_infos]
+    torch.save(transform_list, "/tmp/.cache/transform_list_dnerf.pt")
     if os.path.exists(os.path.join(path, "transforms_test.json")):
         test_cam_infos = readCamerasFromTransforms(
         path, "transforms_test.json", white_background, extension, no_bg=no_bg)
@@ -1042,10 +1045,7 @@ def load_intrinsics(data_dir):
     
     return intrinsic_list
 
-
-def readDFASceneInfo(path, idx_from, idx_to, cam_idx, n_pcd=10000):
-
-    data_dir = os.path.join(path, idx_from)
+def load_caminfo_list(data_dir, is_idx_from=True, cam_idx=0, time=0):# -> tuple[list, list]:
     w2c_list, file_name_list = load_extrinsics(data_dir)
     intrinsic_list = load_intrinsics(data_dir)
 
@@ -1060,22 +1060,48 @@ def readDFASceneInfo(path, idx_from, idx_to, cam_idx, n_pcd=10000):
         image_path = os.path.join(data_dir, 'images', file_name)
         image = Image.open(image_path)
         w2c = w2c_list[i]
-        height, width = image.size
+        width, height = image.size
         FovY = focal2fov(fy, height)
         FovX = focal2fov(fx, width)
 
+        # 승현님이 알려주신 로직
         R = w2c[:3, :3].T
         R = R[[1, 0, 2]]
+
+        # for scale
+        T = w2c[:3, 3] * 3
         uid = i
-        cam_info = CameraInfo(uid=uid, R=R, T=w2c[:3, 3], FovY=FovY, FovX=FovX, image=image,
-                              image_path=image_path, image_name=file_name, width=width, height=height, fid=uid)
-        if uid % 8 == 4:
-            test_cam_infos.append(cam_info)
-        else:
+        cam_info = CameraInfo(uid=uid, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
+                              image_path=image_path, image_name=file_name, width=width, height=height, fid=time)
+
+        if is_idx_from:
             train_cam_infos.append(cam_info)
+        else:
+            if i == cam_idx:
+                train_cam_infos.append(cam_info)
+            else:
+                test_cam_infos.append(cam_info)
+
+        
+    return train_cam_infos, test_cam_infos
 
 
-    nerf_normalization = getNerfppNorm(train_cam_infos + test_cam_infos, apply=False)
+def readDFASceneInfo(path, idx_from, idx_to, cam_idx, n_pcd=10000):
+
+
+    dir_from = os.path.join(path, idx_from)
+    train_cam_infos_from, _ = load_caminfo_list(dir_from, is_idx_from=False, cam_idx=None, time=0)
+
+    dir_to = os.path.join(path, idx_to)
+    train_cam_infos_to, test_cam_infos = load_caminfo_list(dir_to, is_idx_from=True, cam_idx=cam_idx, time=0.5)
+    
+    train_cam_infos = train_cam_infos_from + train_cam_infos_to
+
+    transform_list = [[cam_info.R, cam_info.T] for cam_info in train_cam_infos]
+    torch.save(transform_list, "/tmp/.cache/transform_list_dfa.pt")
+
+    # nerf_normalization = getNerfppNorm(train_cam_infos + test_cam_infos, apply=False)
+    nerf_normalization = {'translation': np.zeros([3], dtype=np.float32), 'radius': 1.}
     
 
     ply_path = os.path.join(path, "points3d.ply")

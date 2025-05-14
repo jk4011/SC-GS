@@ -101,9 +101,6 @@ def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_i
                     lpips_list.append(lpips(image[None], gt_image[None]).mean())
                     ms_ssim_list.append(ms_ssim(image[None], gt_image[None], data_range=1.).mean())
                     alex_lpips_list.append(alex_lpips(image[None], gt_image[None]).mean())
-                    
-                    two_img = show_matching(image, gt_image, bbox=None, skip_line=True)
-                    wandb.log({"img_render": wandb.Image(two_img, caption=f"{idx}"),})
 
                     # images = torch.cat((images, image.unsqueeze(0)), dim=0)
                     # gts = torch.cat((gts, gt_image.unsqueeze(0)), dim=0)

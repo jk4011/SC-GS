@@ -1,7 +1,5 @@
 
 import wandb
-wandb.init(project="SC-GS", dir="./wandb", name='tmp', group='tmp')
-
 import torch
 from random import randint
 from utils.loss_utils import l1_loss, ssim
@@ -74,11 +72,13 @@ def train_node_rendering_step(self, step):
         gt_alpha_mask = viewpoint_cam.gt_alpha_mask.cuda()
         gt_image = gt_image * gt_alpha_mask + render_pkg_re['bg_color'][:, None, None] * (1 - gt_alpha_mask)
     Ll1 = l1_loss(image, gt_image)
-    if step == 3000:
-        # torch.save([image, gt_image], "/tmp/.cache/image.pt")
-        # [image, gt_image] = torch.load("/tmp/.cache/image.pt")
-        torch.save(self.deform.deform.as_gaussians.get_xyz.detach(), "/tmp/.cache/xyz.pt")
-        xyz = torch.load("/tmp/.cache/xyz.pt")
+    if step % 1000 == 0:
+        from jhutil import get_img_diff
+        wandb.log({
+            "diff_img": wandb.Image(get_img_diff(image, gt_image))
+        }, step=step, commit=True)
+        torch.save(self.deform.deform.as_gaussians.get_xyz.detach(), "/tmp/.cache/xyz3.pt")
+        xyz = torch.load("/tmp/.cache/xyz3.pt")
 
 
 

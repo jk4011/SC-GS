@@ -77,6 +77,10 @@ class ModelParams(ParamGroup):
         self.as_gs_force_with_motion_mask = False  # Only for scenes with both static and dynamic parts and without alpha mask
         self.max_d_scale = -1.
         self.is_scene_static = False
+        self.idx_from = "000"
+        self.idx_to = "000"
+        self.cam_idx = -1
+        
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):

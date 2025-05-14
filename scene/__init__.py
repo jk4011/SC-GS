@@ -47,8 +47,8 @@ class Scene:
 
         if os.path.exists(os.path.join(args.source_path, "0")):
             print("Found 0 folder, assuming DFA data set!")
-            scene_info = sceneLoadTypeCallbacks["DFA"](args.source_path, "0", "10", "0")
-
+            scene_info = sceneLoadTypeCallbacks["DFA"](args.source_path, args.idx_from, args.idx_to, args.cam_idx)
+            
         elif os.path.exists(os.path.join(args.source_path, "segmented_ngp")):
             print("Found segment_ngp folder, assuming Diva360 data set!")
             # TODO: implement diva
