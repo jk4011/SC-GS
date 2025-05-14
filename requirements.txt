@@ -17,4 +17,3 @@ scikit-image
 git+https://github.com/Po-Hsun-Su/pytorch-ssim.git
 git+https://github.com/facebookresearch/pytorch3d.git
 wandb
-git+https://github.com/jk4011/jhutil.git#egg=jhutil

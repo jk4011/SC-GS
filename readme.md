@@ -60,10 +60,11 @@ To prevent initialization failure of control points, you use the argument `--ini
 ## Install
 
 ```bash
-git clone https://github.com/yihua7/SC-GS --recursive
+git clone https://github.com/jk4011/SC-GS --recursive
 cd SC-GS
 
 pip install -r requirements.txt
+pip install git+https://github.com/jk4011/jhutil.git#eggs=jhutil
 
 # a modified gaussian splatting (+ depth, alpha rendering)
 pip install ./submodules/diff-gaussian-rasterization
