@@ -20,7 +20,7 @@ lpips = LPIPS()
 from argparse import Namespace
 from pytorch_msssim import ms_ssim
 import wandb
-from jhutil import show_matching
+from jhutil import get_img_diff
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -126,20 +126,22 @@ def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_i
                     test_lpips = lpips_test
                     test_ms_ssim = ms_ssim_test
                     test_alex_lpips = alex_lpips_test
+                    
+                    img_diffs = [
+                        wandb.Image(img_diff_list[i], caption="00") for i in range(0, len(img_diff_list), 3)
+                    ]
+                    logging_data = {
+                        "psnr": psnr_test,
+                        "ssim": ssim_test,
+                        "lpips": lpips_test,
+                        "img_diff": img_diffs,
+                    }
+                    wandb.log(logging_data, step=iteration)
+                
                 if progress_bar is None:
                     print("\n[ITER {}] Evaluating {}: L1 {} PSNR {} SSIM {} LPIPS {} MS SSIM{} ALEX_LPIPS {}".format(iteration, config['name'], l1_test, psnr_test, ssim_test, lpips_test, ms_ssim_test, alex_lpips_test))
                 else:
                     progress_bar.set_description("\n[ITER {}] Evaluating {}: L1 {} PSNR {} SSIM {} LPIPS {} MS SSIM {} ALEX_LPIPS {}".format(iteration, config['name'], l1_test, psnr_test, ssim_test, lpips_test, ms_ssim_test, alex_lpips_test))
-                img_diffs = [
-                    wandb.Image(img_diff_list[i], caption="00") for i in range(0, len(img_diff_list), 3)
-                ]
-                logging_data = {
-                    "psnr": psnr_test,
-                    "ssim": ssim_test,
-                    "lpips": lpips_test,
-                    "img_diff": img_diffs,
-                }
-                wandb.log(logging_data, step=iteration)
                 
                 # if tb_writer:
                 #     tb_writer.add_scalar(config['name'] + '/loss_viewpoint - l1_loss', l1_test, iteration)
