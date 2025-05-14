@@ -1090,10 +1090,10 @@ def readDFASceneInfo(path, idx_from, idx_to, cam_idx, n_pcd=10000):
 
 
     dir_from = os.path.join(path, idx_from)
-    train_cam_infos_from, _ = load_caminfo_list(dir_from, is_idx_from=False, cam_idx=None, time=0)
+    train_cam_infos_from, _ = load_caminfo_list(dir_from, is_idx_from=True, cam_idx=None, time=0)
 
     dir_to = os.path.join(path, idx_to)
-    train_cam_infos_to, test_cam_infos = load_caminfo_list(dir_to, is_idx_from=True, cam_idx=cam_idx, time=0.5)
+    train_cam_infos_to, test_cam_infos = load_caminfo_list(dir_to, is_idx_from=False, cam_idx=cam_idx, time=0.5)
     
     train_cam_infos = train_cam_infos_from + train_cam_infos_to
 

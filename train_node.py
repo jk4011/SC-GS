@@ -75,7 +75,7 @@ def train_node_rendering_step(self, step):
     if step % 1000 == 0:
         from jhutil import get_img_diff
         wandb.log({
-            "diff_img": wandb.Image(get_img_diff(image, gt_image))
+            "train_diff_img": wandb.Image(get_img_diff(image, gt_image))
         }, step=step, commit=True)
         torch.save(self.deform.deform.as_gaussians.get_xyz.detach(), "/tmp/.cache/xyz3.pt")
         xyz = torch.load("/tmp/.cache/xyz3.pt")
