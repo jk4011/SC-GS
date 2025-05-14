@@ -76,6 +76,7 @@ def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_i
                 # gts = torch.tensor([], device="cuda")
                 psnr_list, ssim_list, lpips_list, l1_list = [], [], [], []
                 ms_ssim_list, alex_lpips_list = [], []
+                img_diff_list = []
                 for idx, viewpoint in enumerate(config['cameras']):
                     if load2gpu_on_the_fly:
                         viewpoint.load2device()
@@ -101,6 +102,7 @@ def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_i
                     lpips_list.append(lpips(image[None], gt_image[None]).mean())
                     ms_ssim_list.append(ms_ssim(image[None], gt_image[None], data_range=1.).mean())
                     alex_lpips_list.append(alex_lpips(image[None], gt_image[None]).mean())
+                    img_diff_list.append(get_img_diff(image, gt_image))
 
                     # images = torch.cat((images, image.unsqueeze(0)), dim=0)
                     # gts = torch.cat((gts, gt_image.unsqueeze(0)), dim=0)
@@ -128,6 +130,17 @@ def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_i
                     print("\n[ITER {}] Evaluating {}: L1 {} PSNR {} SSIM {} LPIPS {} MS SSIM{} ALEX_LPIPS {}".format(iteration, config['name'], l1_test, psnr_test, ssim_test, lpips_test, ms_ssim_test, alex_lpips_test))
                 else:
                     progress_bar.set_description("\n[ITER {}] Evaluating {}: L1 {} PSNR {} SSIM {} LPIPS {} MS SSIM {} ALEX_LPIPS {}".format(iteration, config['name'], l1_test, psnr_test, ssim_test, lpips_test, ms_ssim_test, alex_lpips_test))
+                img_diffs = [
+                    wandb.Image(img_diff_list[i], caption="00") for i in range(0, len(img_diff_list), 3)
+                ]
+                logging_data = {
+                    "psnr": psnr_test,
+                    "ssim": ssim_test,
+                    "lpips": lpips_test,
+                    "img_diff": img_diffs,
+                }
+                wandb.log(logging_data, step=iteration)
+                
                 # if tb_writer:
                 #     tb_writer.add_scalar(config['name'] + '/loss_viewpoint - l1_loss', l1_test, iteration)
                 #     tb_writer.add_scalar(config['name'] + '/loss_viewpoint - psnr', psnr_test, iteration)
