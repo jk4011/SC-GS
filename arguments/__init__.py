@@ -77,6 +77,10 @@ class ModelParams(ParamGroup):
         self.as_gs_force_with_motion_mask = False  # Only for scenes with both static and dynamic parts and without alpha mask
         self.max_d_scale = -1.
         self.is_scene_static = False
+        self.idx_from = "000"
+        self.idx_to = "000"
+        self.cam_idx = -1
+        
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):
@@ -97,13 +101,13 @@ class PipelineParams(ParamGroup):
 
 class OptimizationParams(ParamGroup):
     def __init__(self, parser):
-        self.iterations = 80_000
+        self.iterations = 30_000
         self.warm_up = 3_000
         self.dynamic_color_warm_up = 20_000
         self.position_lr_init = 0.00016
         self.position_lr_final = 0.0000016
         self.position_lr_delay_mult = 0.01
-        self.position_lr_max_steps = 30_000
+        self.position_lr_max_steps = 25_000
         self.deform_lr_max_steps = 40_000
         self.feature_lr = 0.0025
         self.opacity_lr = 0.05
