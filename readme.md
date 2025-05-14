@@ -60,9 +60,15 @@ To prevent initialization failure of control points, you use the argument `--ini
 ## Install
 
 ```bash
+
+
 git clone https://github.com/jk4011/SC-GS --recursive
 cd SC-GS
 
+conda create --name sc-gs python=3.10
+conda activate sc-gs
+
+pip install torch==1.13.1+cu117 --index-url https://download.pytorch.org/whl/cu117
 pip install -r requirements.txt
 pip install git+https://github.com/jk4011/jhutil.git#eggs=jhutil
 
