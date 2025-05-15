@@ -85,7 +85,7 @@ def train_node_rendering_step(self, step):
         }
         if step % 1000 == 0:
             from jhutil import get_img_diff
-            logging_data["train_diff_img(node)"]= wandb.Image(get_img_diff(image, gt_image))
+            logging_data["train_diff_img(node)"] = wandb.Image(get_img_diff(image, gt_image))
             wandb.log(logging_data, commit=True)
         else:
             wandb.log(logging_data)
