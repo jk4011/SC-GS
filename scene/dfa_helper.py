@@ -91,4 +91,5 @@ if __name__ == "__main__":
     cam_idx = 0
     w2d_list_train = [w2c_list1 + [w2c_list2[cam_idx]]]
     w2d_list_test = [w2c for (i, w2c) in enumerate(w2c_list2) if i != cam_idx]
+    breakpoint()
     

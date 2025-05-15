@@ -12,11 +12,20 @@
 import torch
 from torch import nn
 import numpy as np
-from utils.graphics_utils import getWorld2View2, getProjectionMatrix
+from utils.graphics_utils import getWorld2View2, getProjectionMatrix, getProjectionMatrixShift
 
 
 class Camera(nn.Module):
-    def __init__(self, colmap_id, R, T, FoVx, FoVy, image, gt_alpha_mask, image_name, uid, trans=np.array([0.0, 0.0, 0.0]), scale=1.0, data_device="cuda", fid=None, depth=None, flow_dirs=[]):
+    def __init__(self, colmap_id, R, T, FoVx, FoVy, image, gt_alpha_mask,
+                image_name, uid,
+                trans=np.array([0.0, 0.0, 0.0]), scale=1.0, data_device = "cuda", fid=None,
+                depth=None,
+                flow_dirs=None,
+                # additioanl parameter
+                mask=None, 
+                cx_px=None,
+                cy_px=None,
+                ):
         super(Camera, self).__init__()
 
         self.uid = uid
@@ -32,19 +41,18 @@ class Camera(nn.Module):
             self.data_device = torch.device(data_device)
         except Exception as e:
             print(e)
-            print(f"[Warning] Custom device {data_device} failed, fallback to default cuda device")
+            print(f"[Warning] Custom device {data_device} failed, fallback to default cuda device" )
             self.data_device = torch.device("cuda")
-
-        self.original_image = image.clamp(0.0, 1.0).to(self.data_device)
+        
+        self.original_image = image.clamp(0.0, 1.0).to(self.data_device)[:3] # RGBA -> RGB
         self.fid = torch.Tensor(np.array([fid])).to(self.data_device)
         self.image_width = self.original_image.shape[2]
         self.image_height = self.original_image.shape[1]
         self.depth = torch.Tensor(depth).to(self.data_device) if depth is not None else None
         self.gt_alpha_mask = gt_alpha_mask
-
+        
         if gt_alpha_mask is not None:
             self.gt_alpha_mask = self.gt_alpha_mask.to(self.data_device)
-            # self.original_image *= gt_alpha_mask.to(self.data_device)
 
         self.zfar = 100.0
         self.znear = 0.01
@@ -53,10 +61,26 @@ class Camera(nn.Module):
         self.scale = scale
 
         self.world_view_transform = torch.tensor(getWorld2View2(R, T, trans, scale)).transpose(0, 1).to(self.data_device)
-        self.projection_matrix = getProjectionMatrix(znear=self.znear, zfar=self.zfar, fovX=self.FoVx, fovY=self.FoVy).transpose(0, 1).to(self.data_device)
+        if cx_px is not None: # Diva360/DFA
+            self.projection_matrix = getProjectionMatrixShift(
+                znear=self.znear,
+                zfar=self.zfar,
+                fovX=self.FoVx,
+                fovY=self.FoVy,
+                cx=cx_px,
+                cy=cy_px,
+                width=self.image_width,
+                height=self.image_height,
+            ).transpose(0,1).to(self.data_device)
+        else:
+            self.projection_matrix = getProjectionMatrix(znear=self.znear, zfar=self.zfar, fovX=self.FoVx, fovY=self.FoVy).transpose(0,1).to(self.data_device)
+        # .cuda()
         self.full_proj_transform = (
             self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
         self.camera_center = self.world_view_transform.inverse()[3, :3]
+        
+        self.mask = mask
+        self.rgba_gt_array = image.clamp(0.0, 1.0)
 
     def reset_extrinsic(self, R, T):
         self.world_view_transform = torch.tensor(getWorld2View2(R, T, self.trans, self.scale)).transpose(0, 1).cuda()

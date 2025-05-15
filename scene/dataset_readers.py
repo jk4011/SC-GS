@@ -29,6 +29,7 @@ from scene.gaussian_model import BasicPointCloud
 from utils.camera_utils import camera_nerfies_from_JSON
 import math
 import copy
+from tqdm import tqdm
 
 
 class CameraInfo(NamedTuple):
@@ -43,25 +44,6 @@ class CameraInfo(NamedTuple):
     width: int
     height: int
     fid: float
-    depth: Optional[np.array] = None
-
-
-class CameraInfoDiva360(NamedTuple):
-    uid: int
-    R: np.array
-    T: np.array
-    FovY: np.array
-    FovX: np.array
-    image: np.array
-    image_path: str
-    image_name: str
-    width: int
-    height: int
-    fid: float
-    cx: float
-    cy: float
-    fl_x: float
-    fl_y: float
     depth: Optional[np.array] = None
 
 
@@ -1045,7 +1027,76 @@ def readDFASceneInfo(path, idx_from, idx_to, cam_idx, n_pcd=10000):
     return scene_info
 
 
+def format_infos_DFAandDiva(dataset,split):
+    # loading
+    cameras = []
+    image = dataset[0][0]
+    if split == "train":
+        for idx in tqdm(range(len(dataset))):
+            image_path = None
+            image_name = f"{idx}"
+            time = dataset.image_times[idx]
+            # matrix = np.linalg.inv(np.array(pose))
+            R,T = dataset.load_pose(idx)
+            # breakpoint()
+            
+            # FovX = focal2fov(dataset.focal[1], image.shape[2])
+            # FovY = focal2fov(dataset.focal[0], image.shape[1])
+            cameras.append(CameraInfo(uid=idx, R=R, T=T, FovY=None, FovX=None, image=image,
+                                image_path=image_path, image_name=image_name, width=image.shape[2], height=image.shape[1], fid=time))
+
+    return cameras
+
+
+def readDiva360infos(datadir, frame_from, frame_to, cam_idx, white_background=True): 
+    # Diva360_dataset 생성
+    from scene.diva360 import Diva360_dataset
+
+    # breakpoint()
+    print("\nLoading train camera infos...\n")
+    train_cam_infos = Diva360_dataset(cam_folder=datadir, 
+                                      split="train", frame_from=frame_from, frame_to=frame_to, cam_idx=cam_idx, white_background=white_background)
+        
+    print("\nLoading test camera infos...\n")
+    test_cam_infos = Diva360_dataset(cam_folder=datadir, 
+                                     split="test", frame_from=None, frame_to=frame_to, cam_idx=cam_idx, white_background=white_background)
+    # breakpoint()
+    # format_infos 함수를 사용하여 train_cam_infos 포맷 변환
+    train_cam_infos_ = format_infos_DFAandDiva(train_cam_infos, "train")
+    
+    # Normalization 계산
+    nerf_normalization = getNerfppNorm(train_cam_infos_)
+    print("\nScene radius: ", nerf_normalization["radius"])
+    print("Scene translation: ", nerf_normalization["translate"], "\n")
+    # breakpoint()
+
+    num_pts = 10000
+    # 랜덤 포인트 클라우드 생성
+    ply_path = os.path.join(datadir, "points3D_diva360.ply")
+    if not os.path.exists(ply_path):
+        xyz = np.random.uniform(-1, 1, (num_pts, 3))
+        rgb = np.ones((num_pts, 3), dtype=np.uint8) * 50
+        storePly(ply_path, xyz, rgb)
+    pcd = fetchPly(ply_path)
+
+    # We create random points inside the bounds of Diva360 (aabb=4)
+    xyz = np.random.random((num_pts, 3)) * 2.6 - 1.3 
+    shs = np.random.random((num_pts, 3)) / 255.0
+    
+    pcd = BasicPointCloud(points=xyz, colors=SH2RGB(shs), normals=np.zeros((num_pts, 3)))
+
+    # SceneInfo 생성 및 반환
+    scene_info = SceneInfo(point_cloud=pcd,
+                           train_cameras=train_cam_infos,
+                           test_cameras=test_cam_infos,
+                           nerf_normalization=nerf_normalization,
+                           ply_path=ply_path)
+    
+    return scene_info
+
+
 sceneLoadTypeCallbacks = {
+    "Diva360" : readDiva360infos,
     "DFA": readDFASceneInfo,
     "Colmap": readColmapSceneInfo,
     # colmap dataset reader from official 3D Gaussian [https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/]

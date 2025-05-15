@@ -67,7 +67,7 @@ def train_node_rendering_step(self, step):
 
     from jhutil import color_log; color_log("cccc", "calc loss", repeat=False)
     # Loss
-    gt_image = viewpoint_cam.original_image.cuda()
+    gt_image = viewpoint_cam.original_image.to(torch.float32).cuda()
     if random_bg_color:
         gt_alpha_mask = viewpoint_cam.gt_alpha_mask.cuda()
         gt_image = gt_image * gt_alpha_mask + render_pkg_re['bg_color'][:, None, None] * (1 - gt_alpha_mask)

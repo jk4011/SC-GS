@@ -79,7 +79,7 @@ class ModelParams(ParamGroup):
         self.is_scene_static = False
         self.idx_from = "000"
         self.idx_to = "000"
-        self.cam_idx = -1
+        self.cam_idx = "00"
         
         super().__init__(parser, "Loading Parameters", sentinel)
 

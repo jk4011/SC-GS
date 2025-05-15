@@ -160,7 +160,7 @@ class GUI:
         self.gaussians = GaussianModel(dataset.sh_degree, fea_dim=gs_fea_dim, with_motion_mask=self.dataset.gs_with_motion_mask)
 
         from jhutil import color_log; color_log("aaaa", "load secne")
-        self.scene = Scene(dataset, self.gaussians, load_iteration=-1)
+        self.scene = Scene(dataset, self.gaussians, load_iteration=-1, is_diva360=args.is_diva360)
         self.gaussians.training_setup(opt)
         if self.deform.name == 'node' and not deform_loaded:
             if not self.dataset.is_blender:
@@ -1492,6 +1492,7 @@ if __name__ == "__main__":
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--deform-type", type=str, default='mlp')
     parser.add_argument("--wandb_group", type=str, default='tmp')
+    parser.add_argument("--is_diva360", action='store_true', default=False)
     
 
     args = parser.parse_args(sys.argv[1:])
