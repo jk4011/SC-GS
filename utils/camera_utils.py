@@ -76,16 +76,29 @@ def camera_to_JSON(id, camera: Camera):
     pos = W2C[:3, 3]
     rot = W2C[:3, :3]
     serializable_array_2d = [x.tolist() for x in rot]
-    camera_entry = {
-        'id': id,
-        'img_name': camera.image_name,
-        'width': camera.width,
-        'height': camera.height,
-        'position': pos.tolist(),
-        'rotation': serializable_array_2d,
-        'fy': fov2focal(camera.FovY, camera.height),
-        'fx': fov2focal(camera.FovX, camera.width)
-    }
+    
+    if isinstance(camera, Camera):
+        camera_entry = {
+            'id': id,
+            'img_name': camera.image_name,
+            'width': camera.image_width,
+            'height': camera.image_height,
+            'position': pos.tolist(),
+            'rotation': serializable_array_2d,
+            'fy': fov2focal(camera.FoVy, camera.image_width),
+            'fx': fov2focal(camera.FoVx, camera.image_height)
+        }
+    else:
+        camera_entry = {
+            'id': id,
+            'img_name': camera.image_name,
+            'width': camera.width,
+            'height': camera.height,
+            'position': pos.tolist(),
+            'rotation': serializable_array_2d,
+            'fy': fov2focal(camera.FovY, camera.height),
+            'fx': fov2focal(camera.FovX, camera.width)
+        }
     return camera_entry
 
 
