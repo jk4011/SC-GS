@@ -129,8 +129,8 @@ def train_step(self, step):
     if step % 1000 == 0:
         from jhutil import get_img_diff
         wandb.log({
-            "train_diff_img": wandb.Image(get_img_diff(image, gt_image))
-        }, step=step, commit=True)
+            "train_diff_img(gaussian)": wandb.Image(get_img_diff(image, gt_image))
+        }, commit=True)
     
     n_gaussian = self.gaussians.get_xyz.detach()
     # from jhutil import color_log; color_log(0000, f'n_gaussian: {n_gaussian}   loss: {loss:.3f}', update=True)

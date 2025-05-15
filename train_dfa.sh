@@ -11,13 +11,12 @@ index_from=$3
 index_to=$4
 cam_idx=$5
 version=$6
-echo $cam_idx
 
-CUDA_VISIBLE_DEVICES=0 python train_gui.py \
-    --source_path "/root/wlsgur4011/GESI/SC-GS/data/DFA_processed/${object_name}" \
+CUDA_VISIBLE_DEVICES=${GPU} python train_gui.py \
+    --source_path "/data2/wlsgur4011/GESI/SC-GS/data/DFA_processed/${object_name}" \
     --model_path "outputs/dfa/${object_name}" \
     --deform_type node \
-    --node_num 512 \
+    --node_num 10000 \
     --hyper_dim 8 \
     --is_blender \
     --eval \
@@ -30,4 +29,5 @@ CUDA_VISIBLE_DEVICES=0 python train_gui.py \
     --idx_from $index_from \
     --idx_to $index_to \
     --cam_idx $cam_idx \
+    --wandb_group $version \
 

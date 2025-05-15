@@ -136,7 +136,7 @@ def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_i
                         "lpips": lpips_test,
                         "img_diff": img_diffs,
                     }
-                    wandb.log(logging_data, step=iteration)
+                    wandb.log(logging_data, step=iteration+1)
                 
                 if progress_bar is None:
                     print("\n[ITER {}] Evaluating {}: L1 {} PSNR {} SSIM {} LPIPS {} MS SSIM{} ALEX_LPIPS {}".format(iteration, config['name'], l1_test, psnr_test, ssim_test, lpips_test, ms_ssim_test, alex_lpips_test))

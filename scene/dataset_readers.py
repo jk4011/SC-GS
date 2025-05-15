@@ -995,7 +995,7 @@ def load_caminfo_list(data_dir, is_idx_from=True, cam_idx=0, time=0):# -> tuple[
         R = R[[1, 0, 2]]
 
         # for scale
-        T = w2c[:3, 3] * 0.5
+        T = w2c[:3, 3]
         uid = i
         cam_info = CameraInfo(uid=uid, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
                               image_path=image_path, image_name=file_name, width=width, height=height, fid=time)
@@ -1026,8 +1026,8 @@ def readDFASceneInfo(path, idx_from, idx_to, cam_idx, n_pcd=10000):
     transform_list = [[cam_info.R, cam_info.T] for cam_info in train_cam_infos]
     torch.save(transform_list, "/tmp/.cache/transform_list_dfa.pt")
 
-    # nerf_normalization = getNerfppNorm(train_cam_infos + test_cam_infos, apply=False)
-    nerf_normalization = {'translation': np.zeros([3], dtype=np.float32), 'radius': 1.}
+    nerf_normalization = getNerfppNorm(train_cam_infos + test_cam_infos, apply=True)
+    # nerf_normalization = {'translation': np.zeros([3], dtype=np.float32), 'radius': 1.}
     
 
     ply_path = os.path.join(path, "points3d.ply")
