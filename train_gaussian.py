@@ -26,6 +26,7 @@ import datetime
 from PIL import Image
 from train_gui_utils import DeformKeypoints
 from scipy.spatial.transform import Rotation as R
+from jhutil import get_img_diff
 
 
 
@@ -131,7 +132,6 @@ def train_step(self, step):
 
 
     if step % 1000 == 0:
-        from jhutil import get_img_diff
         wandb.log({
             "train_diff_img(gaussian)": wandb.Image(get_img_diff(image, gt_image))
         }, commit=True)

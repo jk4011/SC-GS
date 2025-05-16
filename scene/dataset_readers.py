@@ -953,7 +953,7 @@ def readCMUSceneInfo(path, apply_cam_norm=True, recenter_by_pcl=True):
 
 
 from .dfa_helper import load_extrinsics, load_intrinsics
-def load_caminfo_list(data_dir, is_idx_from=True, cam_idx=0, time=0):# -> tuple[list, list]:
+def load_caminfo_list(data_dir, is_idx_from=True, cam_idx=0, time=0):
     w2c_list, file_name_list = load_extrinsics(data_dir)
     intrinsic_list = load_intrinsics(data_dir)
 
@@ -985,11 +985,10 @@ def load_caminfo_list(data_dir, is_idx_from=True, cam_idx=0, time=0):# -> tuple[
         if is_idx_from:
             train_cam_infos.append(cam_info)
         else:
-            if i == cam_idx:
+            if f"{i:02d}" == cam_idx:
                 train_cam_infos.append(cam_info)
             else:
                 test_cam_infos.append(cam_info)
-
         
     return train_cam_infos, test_cam_infos
 
@@ -1001,7 +1000,7 @@ def readDFASceneInfo(path, idx_from, idx_to, cam_idx, n_pcd=10000):
     train_cam_infos_from, _ = load_caminfo_list(dir_from, is_idx_from=True, cam_idx=None, time=0)
 
     dir_to = os.path.join(path, idx_to)
-    train_cam_infos_to, test_cam_infos = load_caminfo_list(dir_to, is_idx_from=False, cam_idx=cam_idx, time=0.5)
+    train_cam_infos_to, test_cam_infos = load_caminfo_list(dir_to, is_idx_from=False, cam_idx=cam_idx, time=1)
     
     train_cam_infos = train_cam_infos_from + train_cam_infos_to
 

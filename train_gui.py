@@ -1499,7 +1499,11 @@ if __name__ == "__main__":
     args.save_iterations.append(args.iterations)
 
     name = args.source_path.split('/')[-1]
-    wandb.init(project=f"SC-GS", dir="./wandb", name=name, group=args.wandb_group)
+    if args.is_diva360:
+        project_name = "SCGS_DFA360"
+    else:
+        project_name = "SCGS_DFA"
+    wandb.init(project=project_name, dir="./wandb", name=name, group=args.wandb_group)
 
     if not args.model_path.endswith(args.deform_type):
         args.model_path = os.path.join(os.path.dirname(os.path.normpath(args.model_path)), os.path.basename(os.path.normpath(args.model_path)) + f'_{args.deform_type}')
