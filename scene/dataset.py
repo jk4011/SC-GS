@@ -18,12 +18,15 @@ class FourDGSdataset(Dataset):
         self.dataset = dataset
         self.args = args
         self.dataset_type=dataset_type
+
+
     def __getitem__(self, index):
         # breakpoint()
 
         if self.dataset_type != "PanopticSports":
             try: # Diva360/DFA
                 image, w2c, time, cx_px, cy_px, fx, fy = self.dataset[index]
+                image = image.to(torch.float32)
                 R,T = w2c
                 image_width = image.shape[2]
                 image_height = image.shape[1]

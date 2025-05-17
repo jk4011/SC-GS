@@ -83,9 +83,9 @@ def train_node_rendering_step(self, step):
             "opacity_mean": opacity_mean,
             "scale_mean": scale_mean,
         }
-        if step % 1000 == 0:
+        if step % 3000 == 0:
             from jhutil import get_img_diff
-            logging_data["train_diff_img(node)"] = wandb.Image(get_img_diff(image, gt_image))
+            logging_data["train_diff_img(node)"] = wandb.Image(get_img_diff(image[:, ::2, ::2], gt_image[:, ::2, ::2]))
             wandb.log(logging_data, commit=True)
         else:
             wandb.log(logging_data)

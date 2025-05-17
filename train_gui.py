@@ -1012,9 +1012,11 @@ class GUI:
                     self.train_node_rendering_step(step)
                 else:
                     self.train_step(step)
+
     
     train_step=train_step
     train_node_rendering_step=train_node_rendering_step
+
 
     @torch.no_grad()
     def test_step(self, specified_cam=None):
@@ -1500,7 +1502,7 @@ if __name__ == "__main__":
 
     name = args.source_path.split('/')[-1]
     if args.is_diva360:
-        project_name = "SCGS_DFA360"
+        project_name = "SCGS_DIVA360"
     else:
         project_name = "SCGS_DFA"
     wandb.init(project=project_name, dir="./wandb", name=name, group=args.wandb_group)

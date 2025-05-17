@@ -62,7 +62,7 @@ def render_set(model_path, load2gpt_on_the_fly, name, iteration, views, gaussian
 
         # Measurement
         image = rendering[:3]
-        gt_image = torch.clamp(view.original_image.to("cuda"), 0.0, 1.0)
+        gt_image = torch.clamp(view.original_image.to(torch.float32).to("cuda"), 0.0, 1.0)
         psnr_list.append(psnr(image[None], gt_image[None]).mean())
         ssim_list.append(ssim_func(image[None], gt_image[None], data_range=1.).mean())
         lpips_list.append(lpips(image[None], gt_image[None]).mean())

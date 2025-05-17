@@ -114,7 +114,7 @@ def train_step(self, step):
 
     from jhutil import color_log; color_log("dddd", "calc loss", repeat=False)
     # Loss
-    gt_image = viewpoint_cam.original_image.cuda()
+    gt_image = viewpoint_cam.original_image.to(torch.float32).cuda()
     if random_bg_color:
         gt_alpha_mask = viewpoint_cam.gt_alpha_mask.cuda()
         gt_image = gt_alpha_mask * gt_image + (1 - gt_alpha_mask) * render_pkg_re['bg_color'][:, None, None]
@@ -131,9 +131,9 @@ def train_step(self, step):
     loss = loss_img
 
 
-    if step % 1000 == 0:
+    if step % 5000 == 0:
         wandb.log({
-            "train_diff_img(gaussian)": wandb.Image(get_img_diff(image, gt_image))
+            "train_diff_img(gaussian)": wandb.Image(get_img_diff(image[:, ::2, ::2], gt_image[:, ::2, ::2]))
         }, commit=True)
     
     n_gaussian = self.gaussians.get_xyz.detach()
