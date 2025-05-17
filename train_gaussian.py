@@ -124,9 +124,10 @@ def train_step(self, step):
 
     Ll1 = l1_loss(image, gt_image)
     if fid != 0:
-        wandb.log({
-            "target_image": wandb.Image(get_img_diff(image, gt_image))
-        }, commit=True)
+        if step % 100 == 0:
+            wandb.log({
+                "target_image": wandb.Image(get_img_diff(image, gt_image))
+            }, commit=True)
     loss_img = (1.0 - self.opt.lambda_dssim) * Ll1 + self.opt.lambda_dssim * (1.0 - ssim(image, gt_image))
     loss = loss_img
 
