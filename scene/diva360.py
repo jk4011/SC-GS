@@ -162,19 +162,20 @@ class Diva360_dataset(Dataset):
                 image_path = os.path.join(images_folder, f"frame_{str(frame_from).zfill(5)}.png")
                 image_paths.append(image_path)
                 image_poses.append((R, T))
-                image_times.append(0.5)
+                image_times.append(0)
                 cx_px.append(cx)
                 cy_px.append(cy)
                 fxs.append(fx)
                 fys.append(fy)
 
-            image_paths.append(last_element['image_path'])
-            image_poses.append(last_element['pose'])
-            image_times.append(1)
-            cx_px.append(last_element['cx'])
-            cy_px.append(last_element['cy'])
-            fxs.append(last_element['fx'])
-            fys.append(last_element['fy'])
+            for i in range(10):
+                image_paths.append(last_element['image_path'])
+                image_poses.append(last_element['pose'])
+                image_times.append(1)
+                cx_px.append(last_element['cx'])
+                cy_px.append(last_element['cy'])
+                fxs.append(last_element['fx'])
+                fys.append(last_element['fy'])
 
             # breakpoint()
             return image_paths, image_poses, image_times, cx_px, cy_px, fxs, fys

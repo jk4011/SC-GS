@@ -1004,7 +1004,7 @@ def readDFASceneInfo(path, idx_from, idx_to, cam_idx, n_pcd=10000):
     assert len(train_cam_infos_from) == len(test_cam_infos) + 1
     assert len(train_cam_infos_to) == 1
     
-    train_cam_infos = train_cam_infos_from + train_cam_infos_to
+    train_cam_infos = train_cam_infos_from + train_cam_infos_to * 10
 
     transform_list = [[cam_info.R, cam_info.T] for cam_info in train_cam_infos]
     torch.save(transform_list, "/tmp/.cache/transform_list_dfa.pt")
