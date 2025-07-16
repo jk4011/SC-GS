@@ -62,7 +62,10 @@ def train_node_rendering_step(self, step):
     from jhutil import color_log; color_log("bbbb", "render gaussian", repeat=False)
     # Render
     random_bg_color = (self.opt.gt_alpha_mask_as_scene_mask or (self.opt.gt_alpha_mask_as_dynamic_mask and not self.deform.deform.as_gaussians.with_motion_mask)) and viewpoint_cam.gt_alpha_mask is not None
-    render_pkg_re = render(viewpoint_cam, self.deform.deform.as_gaussians, self.pipe, self.background, d_xyz, d_rot, d_scale, random_bg_color=random_bg_color, d_opacity=d_opacity, d_color=d_color, d_rot_as_res=self.deform.d_rot_as_res)
+    try:
+        render_pkg_re = render(viewpoint_cam, self.deform.deform.as_gaussians, self.pipe, self.background, d_xyz, d_rot, d_scale, random_bg_color=random_bg_color, d_opacity=d_opacity, d_color=d_color, d_rot_as_res=self.deform.d_rot_as_res)
+    except:
+        return
     image, viewspace_point_tensor, visibility_filter, radii = render_pkg_re["render"], render_pkg_re["viewspace_points"], render_pkg_re["visibility_filter"], render_pkg_re["radii"]
 
     from jhutil import color_log; color_log("cccc", "calc loss", repeat=False)

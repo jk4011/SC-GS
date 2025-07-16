@@ -1510,9 +1510,9 @@ if __name__ == "__main__":
     if not args.model_path.endswith(args.deform_type):
         args.model_path = os.path.join(os.path.dirname(os.path.normpath(args.model_path)), os.path.basename(os.path.normpath(args.model_path)) + f'_{args.deform_type}')
     
-    if os.path.exists(args.model_path):
-        import shutil
-        shutil.rmtree(args.model_path)
+    # if os.path.exists(args.model_path):
+    #     import shutil
+    #     shutil.rmtree(args.model_path)
     
     print("Optimizing " + args.model_path)
     safe_state(args.quiet)
